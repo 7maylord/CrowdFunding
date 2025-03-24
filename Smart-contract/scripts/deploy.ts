@@ -1,26 +1,29 @@
-import { ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 async function main() {
-  const [deployer, donor1, donor2, recipient] = await ethers.getSigners();
+  const [deployer, donor1, donor2, recipient] = await hre.ethers.getSigners();
 
-  console.log("Deploying contracts with the account:", deployer.getAddress());
+  console.log("Deploying contracts with the account:", deployer.address);
 
   // Deploy the CTK Token
   const CTK = await ethers.getContractFactory("CTK");
   const ctk = await CTK.deploy();
   await ctk.waitForDeployment();
-  console.log("CTK Token deployed at:", ctk.getAddress());
+  const ctkAddress = await ctk.getAddress();
+  console.log("CTK Token deployed at:", ctkAddress);
 
   // Deploy the CrowdFunding Contract
   const CrowdFunding = await ethers.getContractFactory("CrowdFunding");
-  const crowdfunding = await CrowdFunding.deploy(ctk.getAddress());
+  const crowdfunding = await CrowdFunding.deploy(ctkAddress);
   await crowdfunding.waitForDeployment();
-  console.log("CrowdFunding Contract deployed at:", crowdfunding.getAddress());
+  const crowdfundingAddress = await crowdfunding.getAddress();
+  console.log("CrowdFunding Contract deployed at:", crowdfundingAddress)
 
   // Mint tokens to donors
   const mintAmount = ethers.parseUnits("100", 18)
-  await ctk.mint(donor1.getAddress(), mintAmount);
-  await ctk.mint(donor2.getAddress(), mintAmount);
+  await ctk.mint(donor1.address, mintAmount);
+  await ctk.mint(donor2.address, mintAmount);
   console.log("Minted CTK to donors");
 
   // Approve the CrowdFunding contract to spend donors' tokens

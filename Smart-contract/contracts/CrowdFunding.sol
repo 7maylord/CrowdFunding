@@ -5,6 +5,7 @@ import {ICTK} from "./ICTK.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+
 contract CrowdFunding is ReentrancyGuard, Ownable {
     
     struct FundRaising {
@@ -51,6 +52,7 @@ contract CrowdFunding is ReentrancyGuard, Ownable {
     error CrowdfundingEnded();
     error NoRefunds();
     error NotADonor();
+    error CrowdfundingOngoing();
 
      // Function to create a new fundraising campaign
     function createFundRaising( string memory _title, string memory _description, address payable _recipient, uint _goal, uint _durationInMinutes
@@ -81,6 +83,10 @@ contract CrowdFunding is ReentrancyGuard, Ownable {
     function donate(uint256 _fundId, uint256 _amount) external nonReentrant {
         // create an instance
         FundRaising memory fundRaising = fundRaisings[_fundId];
+
+        if(_amount <= 0) {
+            revert InvalidAmount();
+        }
         
         // check if funding has ended                
         if (fundRaising.hasEnded) {
@@ -142,6 +148,10 @@ contract CrowdFunding is ReentrancyGuard, Ownable {
         // Ensure the campaign has ended and the goal was not met
         if (fundRaising.amountDonated >= fundRaising.goal) {
             revert NoRefunds();
+        }
+
+        if (!fundRaising.hasEnded) {
+            revert CrowdfundingOngoing();
         }
         
          // Process refunds based on contributions 
